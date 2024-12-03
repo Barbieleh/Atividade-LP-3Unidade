@@ -1,0 +1,93 @@
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
+public class Funcionario {
+   
+    private String nome;
+    private Date dataAdmissao;
+    private float valorHora;
+    private float horasTrabalhadas;
+
+    public Funcionario(String nome, String dataAdmissao, float valorHora, float horasTrabalhadas) throws Exception {
+        this.nome = nome;
+        this.dataAdmissao = new SimpleDateFormat("dd/MM/yyyy").parse(dataAdmissao);
+        this.valorHora = valorHora;
+        this.horasTrabalhadas = horasTrabalhadas;
+    }
+
+    public int calcularTempoEmpresa() {
+        Calendar dataAtual = Calendar.getInstance();
+        Calendar dataAdmissaoCalendar = Calendar.getInstance();
+        dataAdmissaoCalendar.setTime(this.dataAdmissao);
+        
+        int anos = dataAtual.get(Calendar.YEAR) - dataAdmissaoCalendar.get(Calendar.YEAR);
+        
+        if (dataAtual.get(Calendar.MONTH) < dataAdmissaoCalendar.get(Calendar.MONTH) || 
+            (dataAtual.get(Calendar.MONTH) == dataAdmissaoCalendar.get(Calendar.MONTH) &&
+             dataAtual.get(Calendar.DAY_OF_MONTH) < dataAdmissaoCalendar.get(Calendar.DAY_OF_MONTH))) {
+            anos--;
+        }
+        
+        return anos;
+    }
+
+    public float calcularSalario() {
+        float salarioBase = valorHora * horasTrabalhadas;
+        int tempoEmpresa = calcularTempoEmpresa();
+        
+        if (tempoEmpresa >= 10) {
+            salarioBase *= 1.10; // 10% de aumento
+        } else if (tempoEmpresa >= 5) {
+            salarioBase *= 1.05; // 5% de aumento
+        }
+
+        return salarioBase;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public int getTempoEmpresa() {
+        return calcularTempoEmpresa();
+    }
+
+    public float getSalario() {
+        return calcularSalario();
+    }
+}
+
+import java.util.Scanner;
+
+public class Principal {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+      
+        System.out.println("Informe o nome do funcionário:");
+        String nome = scanner.nextLine();
+
+        System.out.println("Informe a data de admissão (dd/MM/yyyy):");
+        String dataAdmissao = scanner.nextLine();
+
+        System.out.println("Informe o valor por hora trabalhada:");
+        float valorHora = scanner.nextFloat();
+
+        System.out.println("Informe o número de horas trabalhadas no mês:");
+        float horasTrabalhadas = scanner.nextFloat();
+
+        try {
+            
+            Funcionario funcionario = new Funcionario(nome, dataAdmissao, valorHora, horasTrabalhadas);
+            
+            System.out.println("\nNome do Funcionário: " + funcionario.getNome());
+            System.out.println("Tempo de Empresa: " + funcionario.getTempoEmpresa() + " anos");
+            System.out.println("Salário a Receber: R$ " + String.format("%.2f", funcionario.getSalario()));
+            
+        } catch (Exception e) {
+            System.out.println("Erro ao processar os dados: " + e.getMessage());
+        }
+        
+        scanner.close();
+    }
+}
