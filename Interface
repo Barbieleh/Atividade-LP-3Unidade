@@ -1,0 +1,190 @@
+import javax.swing.*;
+import javax.swing.text.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.text.*;
+import java.util.*;
+import java.util.List;
+
+public class TelaCadastroFuncionario extends JFrame {
+    
+    private JTextField tfNome;
+    private JFormattedTextField tfDataAdmissao;
+    private JFormattedTextField tfValorHora;
+    private JFormattedTextField tfHorasTrabalhadas;
+    private JButton btnSalvar;
+    private JButton btnExibir;
+    
+    private List<Funcionario> funcionarios;
+    
+    public TelaCadastroFuncionario() {
+        funcionarios = new ArrayList<>();
+        
+        // Configuração da janela
+        setTitle("Cadastro de Funcionários");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        
+        // Layout
+        setLayout(new GridLayout(6, 2, 10, 10));
+        
+        // Nome
+        add(new JLabel("Nome:"));
+        tfNome = new JTextField();
+        add(tfNome);
+        
+        // Data de Admissão
+        add(new JLabel("Data de Admissão (dd/MM/yyyy):"));
+        try {
+            MaskFormatter dataMask = new MaskFormatter("##/##/####");
+            tfDataAdmissao = new JFormattedTextField(dataMask);
+            tfDataAdmissao.setColumns(10);
+            add(tfDataAdmissao);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        
+        // Valor Hora
+        add(new JLabel("Valor Hora (R$):"));
+        try {
+            MaskFormatter valorHoraMask = new MaskFormatter("##.##");
+            tfValorHora = new JFormattedTextField(valorHoraMask);
+            tfValorHora.setColumns(10);
+            add(tfValorHora);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        
+        // Horas Trabalhadas
+        add(new JLabel("Horas Trabalhadas:"));
+        try {
+            MaskFormatter horasMask = new MaskFormatter("###");
+            tfHorasTrabalhadas = new JFormattedTextField(horasMask);
+            tfHorasTrabalhadas.setColumns(10);
+            add(tfHorasTrabalhadas);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        
+        // Botão Salvar
+        btnSalvar = new JButton("Salvar");
+        btnSalvar.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                salvarFuncionario();
+            }
+        });
+        add(btnSalvar);
+        
+        // Botão Exibir
+        btnExibir = new JButton("Exibir");
+        btnExibir.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                exibirFuncionarios();
+            }
+        });
+        add(btnExibir);
+    }
+    
+    // Método para salvar o funcionário
+    private void salvarFuncionario() {
+        // Verificar se todos os campos estão preenchidos
+        if (tfNome.getText().trim().isEmpty() || tfDataAdmissao.getText().trim().isEmpty() ||
+            tfValorHora.getText().trim().isEmpty() || tfHorasTrabalhadas.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Por favor, preencha todos os campos.", "Erro", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Verificar se a data é válida e anterior ou igual a data atual
+        try {
+            DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+            Date dataAdmissao = df.parse(tfDataAdmissao.getText());
+            Date dataAtual = new Date();
+            if (dataAdmissao.after(dataAtual)) {
+                JOptionPane.showMessageDialog(this, "A data de admissão não pode ser futura.", "Erro", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Criar o objeto Funcionario e adicionar ao ArrayList
+            float valorHora = Float.parseFloat(tfValorHora.getText());
+            float horasTrabalhadas = Float.parseFloat(tfHorasTrabalhadas.getText());
+            Funcionario funcionario = new Funcionario(tfNome.getText(), tfDataAdmissao.getText(), valorHora, horasTrabalhadas);
+            funcionarios.add(funcionario);
+            
+            // Limpar campos e colocar o foco no nome
+            tfNome.setText("");
+            tfDataAdmissao.setText("");
+            tfValorHora.setText("");
+            tfHorasTrabalhadas.setText("");
+            tfNome.requestFocus();
+            
+            JOptionPane.showMessageDialog(this, "Funcionário salvo com sucesso!");
+            
+        } catch (ParseException e) {
+            JOptionPane.showMessageDialog(this, "Data inválida. Verifique o formato.", "Erro", JOptionPane.ERROR_MESSAGE);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Valores numéricos inválidos. Por favor, verifique os campos de valor hora e horas trabalhadas.", "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    // Método para exibir a lista de funcionários em outra tela
+    private void exibirFuncionarios() {
+        new TelaExibirFuncionarios(funcionarios).setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new TelaCadastroFuncionario().setVisible(true);
+            }
+        });
+    }
+}
+
+import javax.swing.*;
+import javax.swing.table.*;
+import java.awt.*;
+import java.util.List;
+
+public class TelaExibirFuncionarios extends JFrame {
+    
+    private JTable table;
+    private JButton btnVoltar;
+    
+    public TelaExibirFuncionarios(List<Funcionario> funcionarios) {
+        // Configuração da janela
+        setTitle("Funcionários Cadastrados");
+        setSize(600, 400);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        
+        // Layout
+        setLayout(new BorderLayout());
+        
+        // Definir as colunas para a tabela
+        String[] columnNames = {"Nome", "Data Admissão", "Valor Hora", "Horas Trabalhadas", "Tempo de Empresa", "Salário"};
+        
+        // Criar os dados para a tabela
+        Object[][] data = new Object[funcionarios.size()][6];
+        for (int i = 0; i < funcionarios.size(); i++) {
+            Funcionario f = funcionarios.get(i);
+            data[i][0] = f.getNome();
+            data[i][1] = new SimpleDateFormat("dd/MM/yyyy").format(f.getDataAdmissao());
+            data[i][2] = f.getValorHora();
+            data[i][3] = f.getHorasTrabalhadas();
+            data[i][4] = f.getTempoEmpresa() + " anos";
+            data[i][5] = String.format("R$ %.2f", f.getSalario());
+        }
+        
+        // Criar a tabela
+        table = new JTable(data, columnNames);
+        table.setFillsViewportHeight(true);
+        JScrollPane scrollPane = new JScrollPane(table);
+        add(scrollPane, BorderLayout.CENTER);
+        
+        // Botão Voltar
+        btnVoltar = new JButton("Voltar");
+        btnVoltar.addActionListener(e -> dispose());
+        add(btnVoltar, BorderLayout.SOUTH);
+    }
+}
